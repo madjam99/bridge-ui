@@ -9,19 +9,21 @@
     <div id="rango-widget" style="height: 100vh;"></div>
 
     <script>
-      window.rangoWidget.init({
-        theme: 'dark',
-        fromToken: '',
-        toToken: '',
-        fromChain: '',
-        toChain: '',
-        slippage: 1,
-        referrer: {
-          address: 'QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C',
-          fee: 0.002, // 0.2% fee
-          type: 'WALLET'
-        }
-      });
+      window.onload = function () {
+        window.rangoWidget.init({
+          theme: "dark",
+          fromToken: "",
+          toToken: "",
+          fromChain: "",
+          toChain: "",
+          slippage: 1,
+          referrer: {
+            address: "QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C",
+            fee: 0.002,
+            type: "WALLET"
+          }
+        });
+      };
     </script>
   </body>
 </html>
