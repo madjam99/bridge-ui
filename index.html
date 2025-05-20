@@ -10,19 +10,23 @@
 
     <script>
       window.onload = function () {
-        window.rangoWidget.init({
-          theme: "dark",
-          fromToken: "",
-          toToken: "",
-          fromChain: "",
-          toChain: "",
-          slippage: 1,
-          referrer: {
-            address: "QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C",
-            fee: 0.002,
-            type: "WALLET"
-          }
-        });
+        if (window.rangoWidget) {
+          window.rangoWidget.init({
+            theme: "dark",
+            fromToken: "",
+            toToken: "",
+            fromChain: "",
+            toChain: "",
+            slippage: 1,
+            referrer: {
+              address: "QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C",
+              fee: 0.002,
+              type: "WALLET"
+            }
+          });
+        } else {
+          console.error("Rango widget not loaded");
+        }
       };
     </script>
   </body>
