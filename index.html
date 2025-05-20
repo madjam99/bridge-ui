@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChainBridge - Secure MultiChain Bridge</title>
+  <script src="https://cdn.jsdelivr.net/npm/@lifinance/sdk@2.0.0-beta.82/dist/sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+  <h1>Bridge Your Tokens Instantly</h1>
+  <p>Secure bridge powered by <strong>Li.Fi</strong></p>
+
+  <button onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
+  <p id="walletAddress"></p>
+
+  <br>
+  <label for="fromChain">From Chain:</label>
+  <select id="fromChain">
+    <option value="ETH">Ethereum</option>
+    <option value="BSC">Binance Smart Chain</option>
+  </select>
+
+  <label for="toChain">To Chain:</label>
+  <select id="toChain">
+    <option value="SOL">Solana</option>
+    <option value="ETH">Ethereum</option>
+  </select>
+
+  <input type="text" id="amount" placeholder="Amount in USDC" />
+  <button onclick="bridgeTokens()">Bridge Now</button>
+
+  <div id="quoteResult"></div>
+  <button onclick="executeBridge()" id="executeBtn" style="display:none;">Execute Bridge</button>
+
+  <script>
+    let userAddress = null;
+    let latestRoute = null;
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        const web3 = new Web3(window.ethereum);
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          userAddress = accounts[0];
+          document.getElementById('walletAddress').innerText = `Connected: ${userAddress}`;
+        } catch (err) {
+          alert('Wallet connection failed');
+        }
+      } else {
+        alert('MetaMask not detected');
+      }
+    }
+
+    async function bridgeTokens() {
+      const fromChain = document.getElementById('fromChain').value;
+      const toChain = document.getElementById('toChain').value;
+      const amount = document.getElementById('amount').value;
+
+      if (!userAddress) {
+        alert('Please connect your wallet first.');
+        return;
+      }
+
+      if (!amount || isNaN(amount)) {
+        alert('Please enter a valid amount');
+        return;
+      }
+
+      const sdk = new LiFi.LiFi();
+
+      try {
+        const quote = await sdk.getQuote({
+          fromChain: fromChain.toLowerCase(),
+          toChain: toChain.toLowerCase(),
+          fromToken: {
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            chainId: fromChain === 'ETH' ? 1 : 56
+          },
+          toToken: {
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            chainId: toChain === 'ETH' ? 1 : 101
+          },
+          fromAddress: userAddress,
+          fromAmount: (parseFloat(amount) * 1e6).toString(),
+          slippage: 0.03,
+          integrator: 'ChainBridgeApp'
+        });
+
+        const feePercent = 0.002;
+        const estimatedOutput = quote.estimate.toAmount / 1e6;
+        const feeAmount = estimatedOutput * feePercent;
+        const userReceives = estimatedOutput - feeAmount;
+
+        document.getElementById('quoteResult').innerText = `Quote Received:\nFrom ${fromChain} to ${toChain}\nEstimated Output: ${userReceives.toFixed(6)} USDC (after 0.2% fee)`;
+        document.getElementById('executeBtn').style.display = 'inline-block';
+        latestRoute = quote;
+
+      } catch (error) {
+        console.error(error);
+        alert('Failed to fetch quote from LiFi');
+      }
+    }
+
+    async function executeBridge() {
+      if (!latestRoute) {
+        alert('No route available. Please fetch a quote first.');
+        return;
+      }
+
+      const sdk = new LiFi.LiFi();
+
+      try {
+        const execution = await sdk.executeRoute({
+          signer: await new Web3(window.ethereum).eth.getSigner(),
+          route: latestRoute
+        });
+
+        alert('Bridge transaction submitted! Check your wallet and bridge status.');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to execute bridge transaction.');
+      }
+    }
+  </script>
+</body>
+</html>
