@@ -3,23 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <title>Rango Bridge</title>
-    <script src="https://widget.rango.exchange/build/rango-widget.js"></script>
+    <script>
+      window.addEventListener("load", function () {
+        const script = document.createElement("script");
+        script.src = "https://widget.rango.exchange/build/rango-widget.js";
+        script.onload = function () {
+          window.rangoWidget.init({
+            theme: "dark",
+            slippage: 1,
+            referrer: {
+              address: "QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C",
+              fee: 0.002,
+              type: "WALLET"
+            }
+          });
+        };
+        document.body.appendChild(script);
+      });
+    </script>
   </head>
   <body style="margin: 0; padding: 0; height: 100vh; width: 100vw;">
     <div id="rango-widget" style="height: 100%; width: 100%;"></div>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        window.rangoWidget.init({
-          theme: "dark",
-          slippage: 1,
-          referrer: {
-            address: "QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C",
-            fee: 0.002,
-            type: "WALLET"
-          }
-        });
-      });
-    </script>
   </body>
 </html>
