@@ -1,59 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bridge Powered by Li.Fi</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MultiChain Token Bridge</title>
   <script src="https://cdn.jsdelivr.net/npm/@lifinance/sdk@2.0.0-beta.82/dist/sdk.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #0f111a;
-      color: white;
-      text-align: center;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0e101a;
+      color: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #36d399;
+    }
+
+    .bridge-box {
+      background: #1a1c2c;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 255, 191, 0.1);
+      max-width: 400px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     select, input, button {
+      margin: 10px 0;
       padding: 10px;
-      margin: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 6px;
       font-size: 16px;
+    }
+
+    button {
+      background-color: #36d399;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2fc38b;
+    }
+
+    #quote {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    #footer {
+      margin-top: 40px;
+      font-size: 13px;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <h1>LiFi Token Bridge</h1>
-  <p>Bridge USDC with 0.2% fee to your wallet</p>
 
-  <button onclick="connectWallet()">Connect Wallet</button>
-  <p id="wallet"></p>
+  <h1>🪙 MultiChain Token Bridge</h1>
 
-  <select id="fromChain">
-    <option value="ETH">Ethereum</option>
-    <option value="BSC">Binance</option>
-  </select>
+  <div class="bridge-box">
+    <button onclick="connectWallet()">Connect Wallet</button>
+    <p id="wallet">Not connected</p>
 
-  <select id="toChain">
-    <option value="BSC">Binance</option>
-    <option value="ETH">Ethereum</option>
-  </select>
+    <select id="fromChain">
+      <option value="ETH">Ethereum</option>
+      <option value="BSC">Binance</option>
+      <option value="ARB">Arbitrum</option>
+      <option value="POL">Polygon</option>
+      <option value="OP">Optimism</option>
+      <option value="BASE">Base</option>
+    </select>
 
-  <input type="text" id="amount" placeholder="Amount in USDC" />
-  <button onclick="getQuote()">Get Quote</button>
-  <p id="quote"></p>
+    <select id="toChain">
+      <option value="ETH">Ethereum</option>
+      <option value="BSC">Binance</option>
+      <option value="ARB">Arbitrum</option>
+      <option value="POL">Polygon</option>
+      <option value="OP">Optimism</option>
+      <option value="BASE">Base</option>
+    </select>
+
+    <input type="text" id="amount" placeholder="Amount in USDC" />
+    <button onclick="getQuote()">Get Quote</button>
+
+    <p id="quote">Awaiting input...</p>
+  </div>
+
+  <div id="footer">Bridge powered by Li.Fi • 0.2% fee to operator</div>
 
   <script>
     let userAddress = null;
-    let sdk = new LiFi.LiFi();
+    const sdk = new LiFi.LiFi();
 
     async function connectWallet() {
       if (window.ethereum) {
-        const web3 = new Web3(window.ethereum);
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         userAddress = accounts[0];
-        document.getElementById('wallet').innerText = 'Connected: ' + userAddress;
+        document.getElementById('wallet').innerText = `Connected: ${userAddress}`;
       } else {
-        alert('Install MetaMask');
+        alert('MetaMask not detected.');
       }
     }
 
@@ -62,8 +123,8 @@
       const to = document.getElementById('toChain').value;
       const amount = document.getElementById('amount').value;
 
-      if (!userAddress || !amount) {
-        alert('Please connect wallet and enter amount');
+      if (!userAddress || !amount || isNaN(amount)) {
+        alert('Connect wallet and enter a valid amount.');
         return;
       }
 
@@ -72,26 +133,39 @@
           fromChain: from.toLowerCase(),
           toChain: to.toLowerCase(),
           fromToken: {
-            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC Ethereum
-            chainId: from === 'ETH' ? 1 : 56
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC (Ethereum)
+            chainId: from === 'ETH' ? 1 :
+                     from === 'BSC' ? 56 :
+                     from === 'ARB' ? 42161 :
+                     from === 'POL' ? 137 :
+                     from === 'OP' ? 10 :
+                     from === 'BASE' ? 8453 : 1
           },
           toToken: {
-            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC Ethereum
-            chainId: to === 'ETH' ? 1 : 56
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            chainId: to === 'ETH' ? 1 :
+                     to === 'BSC' ? 56 :
+                     to === 'ARB' ? 42161 :
+                     to === 'POL' ? 137 :
+                     to === 'OP' ? 10 :
+                     to === 'BASE' ? 8453 : 1
           },
           fromAddress: userAddress,
           fromAmount: (parseFloat(amount) * 1e6).toString(),
           slippage: 0.03,
-          integrator: 'YourAffiliateNameHere'
+          integrator: 'BridgeFeeApp'
         });
 
-        const netAmount = (quote.estimate.toAmount / 1e6) * 0.998;
-        document.getElementById('quote').innerText = `Bridge from ${from} to ${to}, Estimated Output: ${netAmount.toFixed(4)} USDC after 0.2% fee`;
+        const estimate = quote.estimate.toAmount / 1e6;
+        const net = estimate * 0.998;
+        document.getElementById('quote').innerText = `Estimated Output: ${net.toFixed(4)} USDC (after 0.2% fee)`;
+
       } catch (e) {
         console.error(e);
-        alert('Error getting quote');
+        document.getElementById('quote').innerText = '❌ Error fetching quote.';
       }
     }
   </script>
+
 </body>
 </html>
