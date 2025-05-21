@@ -1,72 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Rango MultiChain Bridge</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      html, body {
-        width: 100%;
-        height: 100%;
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #0f111a;
-        color: white;
-        overflow: hidden;
-      }
-      #rango-widget {
-        height: 100%;
-        width: 100%;
-      }
-      .loading {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        font-size: 1.2rem;
-        color: #aaa;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="loading" id="loading">🔄 Loading Rango Bridge...</div>
-    <div id="rango-widget" style="display: none;"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge Powered by Li.Fi</title>
+  <script src="https://cdn.jsdelivr.net/npm/@lifinance/sdk@2.0.0-beta.82/dist/sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f111a;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    select, input, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>LiFi Token Bridge</h1>
+  <p>Bridge USDC with 0.2% fee to your wallet</p>
 
-    <script>
-      // Wait until the page is fully loaded
-      window.addEventListener("load", function () {
-        const script = document.createElement("script");
-        script.src = "https://widget.rango.exchange/build/rango-widget.js";
-        script.onload = function () {
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("rango-widget").style.display = "block";
+  <button onclick="connectWallet()">Connect Wallet</button>
+  <p id="wallet"></p>
 
-          // Initialize Rango Widget
-          window.rangoWidget.init({
-            theme: "dark",
-            slippage: 1,
-            referrer: {
-              address: "QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C", // your fee wallet
-              fee: 0.002, // 0.2%
-              type: "WALLET"
-            },
-            hideSelectionFrom: false,
-            hideSelectionTo: false,
-            enableSameTokenSwap: false,
-            layout: "auto",
-            fontFamily: "inherit"
-          });
-        };
-        script.onerror = function () {
-          document.getElementById("loading").innerText =
-            "❌ Failed to load bridge. Please try again later.";
-        };
-        document.body.appendChild(script);
-      });
-    </script>
-  </body>
+  <select id="fromChain">
+    <option value="ETH">Ethereum</option>
+    <option value="BSC">Binance</option>
+  </select>
+
+  <select id="toChain">
+    <option value="BSC">Binance</option>
+    <option value="ETH">Ethereum</option>
+  </select>
+
+  <input type="text" id="amount" placeholder="Amount in USDC" />
+  <button onclick="getQuote()">Get Quote</button>
+  <p id="quote"></p>
+
+  <script>
+    let userAddress = null;
+    let sdk = new LiFi.LiFi();
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        const web3 = new Web3(window.ethereum);
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        userAddress = accounts[0];
+        document.getElementById('wallet').innerText = 'Connected: ' + userAddress;
+      } else {
+        alert('Install MetaMask');
+      }
+    }
+
+    async function getQuote() {
+      const from = document.getElementById('fromChain').value;
+      const to = document.getElementById('toChain').value;
+      const amount = document.getElementById('amount').value;
+
+      if (!userAddress || !amount) {
+        alert('Please connect wallet and enter amount');
+        return;
+      }
+
+      try {
+        const quote = await sdk.getQuote({
+          fromChain: from.toLowerCase(),
+          toChain: to.toLowerCase(),
+          fromToken: {
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC Ethereum
+            chainId: from === 'ETH' ? 1 : 56
+          },
+          toToken: {
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC Ethereum
+            chainId: to === 'ETH' ? 1 : 56
+          },
+          fromAddress: userAddress,
+          fromAmount: (parseFloat(amount) * 1e6).toString(),
+          slippage: 0.03,
+          integrator: 'YourAffiliateNameHere'
+        });
+
+        const netAmount = (quote.estimate.toAmount / 1e6) * 0.998;
+        document.getElementById('quote').innerText = `Bridge from ${from} to ${to}, Estimated Output: ${netAmount.toFixed(4)} USDC after 0.2% fee`;
+      } catch (e) {
+        console.error(e);
+        alert('Error getting quote');
+      }
+    }
+  </script>
+</body>
 </html>
