@@ -2,27 +2,71 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Rango Bridge</title>
+    <title>Rango MultiChain Bridge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 100%;
+        height: 100%;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #0f111a;
+        color: white;
+        overflow: hidden;
+      }
+      #rango-widget {
+        height: 100%;
+        width: 100%;
+      }
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-size: 1.2rem;
+        color: #aaa;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading" id="loading">🔄 Loading Rango Bridge...</div>
+    <div id="rango-widget" style="display: none;"></div>
+
     <script>
+      // Wait until the page is fully loaded
       window.addEventListener("load", function () {
         const script = document.createElement("script");
         script.src = "https://widget.rango.exchange/build/rango-widget.js";
         script.onload = function () {
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("rango-widget").style.display = "block";
+
+          // Initialize Rango Widget
           window.rangoWidget.init({
             theme: "dark",
             slippage: 1,
             referrer: {
-              address: "QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C",
-              fee: 0.002,
+              address: "QVYNxM1zZpGbvVKtt7YvCShH7Xixv1o4LuJMwizns4C", // your fee wallet
+              fee: 0.002, // 0.2%
               type: "WALLET"
-            }
+            },
+            hideSelectionFrom: false,
+            hideSelectionTo: false,
+            enableSameTokenSwap: false,
+            layout: "auto",
+            fontFamily: "inherit"
           });
+        };
+        script.onerror = function () {
+          document.getElementById("loading").innerText =
+            "❌ Failed to load bridge. Please try again later.";
         };
         document.body.appendChild(script);
       });
     </script>
-  </head>
-  <body style="margin: 0; padding: 0; height: 100vh; width: 100vw;">
-    <div id="rango-widget" style="height: 100%; width: 100%;"></div>
   </body>
 </html>
